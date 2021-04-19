@@ -3,8 +3,10 @@ package ru.yandex.incoming34.Server;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Objects;
 import java.util.Scanner;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,7 @@ import ru.yandex.incoming34.Server.Server;
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ClientHandler implements Runnable {
+	@Autowired
 	private Server server;
 	// исходящее сообщение
 	private PrintWriter outMessage;
@@ -25,43 +28,53 @@ public class ClientHandler implements Runnable {
 	private Socket clientSocket = null;
 	// количество клиента в чате, статичное поле
 	private static int clients_count = 0;
-
-	public ClientHandler(Socket socket, Server server) {
+	
+	public void initialize(Socket socket, Server server) {
 	    try {
 	      clients_count++;
 	      this.server = server;
 	      this.clientSocket = socket;
-	      this.outMessage = new PrintWriter(socket.getOutputStream());
-	      this.inMessage = new Scanner(socket.getInputStream());
+	      outMessage = new PrintWriter(socket.getOutputStream());
+	      inMessage = new Scanner(socket.getInputStream());
 	    } catch (IOException ex) {
 	      ex.printStackTrace();
 	    }
+	    System.out.println("ClientHandler initialized: " + this + " for Server: " + server);
+	    System.out.println("Канал входящих сообщений: " + inMessage + " Канал исходящих сообщений: " + outMessage);
+	    new Thread(this).start();
+	    //run();
 	  }
+	
 	
 	public ClientHandler() {
 		
 	}
+	
 
 	public void run() {
-		while (true) {
+		
 			// сервер отправляет сообщение
-			// server.sendMessageToAllClients("Новый участник вошёл в чат!");
-			// server.sendMessageToAllClients("Клиентов в чате = " + clients_count);
-			break;
-		}
+			server.sendMessageToAllClients("Новый участник вошёл в чат!");
+			server.sendMessageToAllClients("Клиентов в чате = " + clients_count);
+		
 		while (true) {
+			if (Objects.isNull(inMessage)) {
+				continue;
+			}
 			// Если от клиента пришло сообщение
 			if (inMessage.hasNext()) {
 				String clientMessage = inMessage.nextLine();
+				server.sendMessageToAllClients(clientMessage);
+				System.out.println(clientMessage);
 				// если клиент отправляет данное сообщение, то цикл прерывается и
 				// клиент выходит из чата
 				if (clientMessage.equalsIgnoreCase("##session##end##")) {
 					break;
 				}
 				// выводим в консоль сообщение (для теста)
-				System.out.println(clientMessage);
+				
 				// отправляем данное сообщение всем клиентам
-				server.sendMessageToAllClients(clientMessage);
+				//server.sendMessageToAllClients(clientMessage);
 			}
 			// останавливаем выполнение потока на 100 мс
 			try {
@@ -75,8 +88,9 @@ public class ClientHandler implements Runnable {
 		}
 	}
 
-	public void sendMsg(String msg) {
+	public void sendMessageToClient(String msg) {
 		try {
+			System.out.println("Sending: " + msg + " to " + outMessage);
 			outMessage.println(msg);
 			outMessage.flush();
 		} catch (Exception ex) {
@@ -90,16 +104,6 @@ public class ClientHandler implements Runnable {
 		server.removeClient(this);
 		clients_count--;
 		server.sendMessageToAllClients("Клиентов в чате = " + clients_count);
-	}
-
-	public void setSocket(Socket socket) {
-		clientSocket = socket;
-		
-	}
-
-	public void serServer(Server srv) {
-		server =srv;
-		
 	}
 
 }

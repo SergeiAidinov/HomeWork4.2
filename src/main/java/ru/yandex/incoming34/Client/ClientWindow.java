@@ -23,24 +23,17 @@ import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
 public class ClientWindow extends JFrame {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-// адрес сервера
-	private static final String SERVER_HOST = "localhost";
-	// порт
-	private static final int SERVER_PORT = 3443;
-	// клиентский сокет
-	private Socket clientSocket;
-	// входящее сообщение
-	private Scanner inMessage;
-	// исходящее сообщение
-	private PrintWriter outMessage;
+	// ссылка для привязки графического окна к клиенту
+	Client client;
+
 	// следующие поля отвечают за элементы формы
-	private JTextField jtfMessage;
-	private JTextField jtfName;
+	private JTextField messageField;
+	private JTextField nameField;
 	private JTextArea jtaTextAreaMessage;
+	private JLabel jlNumberOfClients;
+	// следующие поля отвечают за обмен сообщениями с клиентом
+	private PrintWriter outMessage;
+	Scanner inMessage;
 	// имя клиента
 	private String clientName = "";
 
@@ -50,16 +43,14 @@ public class ClientWindow extends JFrame {
 	}
 
 	// конструктор
-	public ClientWindow() {
-		try {
-			// подключаемся к серверу
-			clientSocket = new Socket(SERVER_HOST, SERVER_PORT);
-			inMessage = new Scanner(clientSocket.getInputStream());
-			outMessage = new PrintWriter(clientSocket.getOutputStream());
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public ClientWindow(Client client) {
+		this.client = client;
+		/*
+		this.jlNumberOfClients = jlNumberOfClients;
+		this.jtaTextAreaMessage = jtaTextAreaMessage;
+		this.inMessage = inMessage;
+		this.outMessage = outMessage;
+		*/
 		// Задаём настройки элементов на форме
 		setBounds(600, 300, 600, 500);
 		setTitle("Client");
@@ -70,102 +61,89 @@ public class ClientWindow extends JFrame {
 		JScrollPane jsp = new JScrollPane(jtaTextAreaMessage);
 		add(jsp, BorderLayout.CENTER);
 		// label, который будет отражать количество клиентов в чате
-		final JLabel jlNumberOfClients = new JLabel("Количество клиентов в чате: ");
+		jlNumberOfClients = new JLabel("Количество клиентов в чате: ");
 		add(jlNumberOfClients, BorderLayout.NORTH);
 		JPanel bottomPanel = new JPanel(new BorderLayout());
 		add(bottomPanel, BorderLayout.SOUTH);
-		JButton jbSendMessage = new JButton("Отправить");
-		bottomPanel.add(jbSendMessage, BorderLayout.EAST);
-		jtfMessage = new JTextField("Введите ваше сообщение: ");
-		bottomPanel.add(jtfMessage, BorderLayout.CENTER);
-		jtfName = new JTextField("Введите ваше имя: ");
-		bottomPanel.add(jtfName, BorderLayout.WEST);
+		JButton buttonSend = new JButton("Отправить");
+		bottomPanel.add(buttonSend, BorderLayout.EAST);
+		messageField = new JTextField("Введите ваше сообщение: ");
+		bottomPanel.add(messageField, BorderLayout.CENTER);
+		nameField = new JTextField("Введите ваше имя: ");
+		bottomPanel.add(nameField, BorderLayout.WEST);
+		setVisible(true);
 		// обработчик события нажатия кнопки отправки сообщения
-		jbSendMessage.addActionListener(new ActionListener() {
+		buttonSend.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// если имя клиента, и сообщение непустые, то отправляем сообщение
-				if (!jtfMessage.getText().trim().isEmpty() && !jtfName.getText().trim().isEmpty()) {
-					clientName = jtfName.getText();
+				if (!messageField.getText().trim().isEmpty() && !nameField.getText().trim().isEmpty()) {
+					//clientName = nameField.getText();
 					sendMsg();
 					// фокус на текстовое поле с сообщением
-					jtfMessage.grabFocus();
+					messageField.grabFocus();
 				}
 			}
 		});
 		// при фокусе поле сообщения очищается
-		jtfMessage.addFocusListener(new FocusAdapter() {
+		messageField.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
-				jtfMessage.setText("");
+				messageField.setText("");
 			}
 		});
 		// при фокусе поле имя очищается
-		jtfName.addFocusListener(new FocusAdapter() {
+		nameField.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
-				jtfName.setText("");
+				nameField.setText("");
 			}
 		});
 		// в отдельном потоке начинаем работу с сервером
-		new Thread(new Runnable() {
-			public void run() {
-				try {
-					// бесконечный цикл
-					while (true) {
-						// если есть входящее сообщение
-						if (inMessage.hasNext()) {
-							// считываем его
-							String inMes = inMessage.nextLine();
-							String clientsInChat = "Клиентов в чате = ";
-							if (inMes.indexOf(clientsInChat) == 0) {
-								jlNumberOfClients.setText(inMes);
-							} else {
-								// выводим сообщение
-								jtaTextAreaMessage.append(inMes);
-								// добавляем строку перехода
-								jtaTextAreaMessage.append("\n");
-							}
-						}
-					}
-				} catch (Exception e) {
-				}
-			}
-		}).start();
+		
+		
+		/*
 		// добавляем обработчик события закрытия окна клиентского приложения
 		addWindowListener(new WindowAdapter() {
+			
+
 			@Override
 			public void windowClosing(WindowEvent e) {
 				super.windowClosing(e);
-				try {
-					// здесь проверяем, что имя клиента непустое и не равно значению по умолчанию
-					if (!clientName.isEmpty() && clientName != "Введите ваше имя: ") {
-						outMessage.println(clientName + " вышел из чата!");
-					} else {
-						outMessage.println("Участник вышел из чата, так и не представившись!");
-					}
-					// отправляем служебное сообщение, которое является признаком того, что клиент
-					// вышел из чата
-					outMessage.println("##session##end##");
-					outMessage.flush();
-					outMessage.close();
-					inMessage.close();
-					clientSocket.close();
-				} catch (IOException exc) {
-
+				
+				// здесь проверяем, что имя клиента непустое и не равно значению по умолчанию
+				if (!clientName.isEmpty() && clientName != "Введите ваше имя: ") {
+					outMessage.println(clientName + " вышел из чата!");
+				} else {
+					outMessage.println("Участник вышел из чата, так и не представившись!");
 				}
+				// отправляем служебное сообщение, которое является признаком того, что клиент
+				// вышел из чата
+				outMessage.println("##session##end##");
+				outMessage.flush();
+				outMessage.close();
+				inMessage.close();
+				//clientSocket.close();
 			}
 		});
+		*/
 		// отображаем форму
-		setVisible(true);
+		
 	}
-
+		
 	// отправка сообщения
 	public void sendMsg() {
 		// формируем сообщение для отправки на сервер
-		String messageStr = jtfName.getText() + ": " + jtfMessage.getText();
+		String messageStr = nameField.getText() + ": " + messageField.getText();
 		// отправляем сообщение
-		outMessage.println(messageStr);
-		outMessage.flush();
-		jtfMessage.setText("");
+		client.performSendingMessage(messageStr);
+		messageField.setText("");
+	}
+
+	public void displayMessage(String string) {
+		// TODO Auto-generated method stub
+		jtaTextAreaMessage.append(string);
 	}
 }
+	
+		
+		

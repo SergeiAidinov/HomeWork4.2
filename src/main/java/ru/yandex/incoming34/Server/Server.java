@@ -21,6 +21,7 @@ public class Server {
 	@Autowired
 	ClientHandler clientHandler;
 	ApplicationContext context;
+	private Server server;
 
 	public ClientHandler getClientHandler() {
 		// TODO Auto-generated method stub
@@ -36,6 +37,8 @@ public class Server {
 		System.out.println("ClientHandler: " + clientHandler);
 		System.out.println("Context: " + context);
 	}
+	
+	
 
 	public void procedure() {
 		// сокет клиента, это некий поток, который будет подключаться к серверу
@@ -54,13 +57,12 @@ public class Server {
 				// создаём обработчик клиента, который подключился к серверу
 				// this - это наш сервер
 				
-				ClientHandler client = (ClientHandler) context.getBean("clientHandler"); 
-				client.setSocket(clientSocket);
-				client.serServer(this);
+				ClientHandler client = (ClientHandler) context.getBean("clientHandler");
+				client.initialize(clientSocket, this);
 				System.out.println("Новое подключение: " + client);
 				clients.add(client);
 				// каждое подключение клиента обрабатываем в новом потоке
-				new Thread(clientHandler).start();
+				//new Thread(clientHandler).start();
 			}
 		} catch (IOException ex) {
 			ex.printStackTrace();
@@ -78,7 +80,7 @@ public class Server {
 
 	public void sendMessageToAllClients(String msg) {
 		for (ClientHandler o : clients) {
-			o.sendMsg(msg);
+			o.sendMessageToClient(msg);
 		}
 
 	}
