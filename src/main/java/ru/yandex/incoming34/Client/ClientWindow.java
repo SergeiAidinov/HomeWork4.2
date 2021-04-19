@@ -24,33 +24,28 @@ import javax.swing.WindowConstants;
 
 public class ClientWindow extends JFrame {
 	// ссылка для привязки графического окна к клиенту
-	Client client;
+	final Client client;
 
 	// следующие поля отвечают за элементы формы
 	private JTextField messageField;
 	private JTextField nameField;
 	private JTextArea jtaTextAreaMessage;
 	private JLabel jlNumberOfClients;
-	// следующие поля отвечают за обмен сообщениями с клиентом
-	private PrintWriter outMessage;
-	Scanner inMessage;
+	private boolean isFirstMessage = true;
+	// Scanner inMessage;
 	// имя клиента
-	private String clientName = "";
+	//private String clientName = null;
 
 	// получаем имя клиента
+	/*
 	public String getClientName() {
 		return this.clientName;
 	}
+	*/
 
 	// конструктор
-	public ClientWindow(Client client) {
+	public ClientWindow(final Client client) {
 		this.client = client;
-		/*
-		this.jlNumberOfClients = jlNumberOfClients;
-		this.jtaTextAreaMessage = jtaTextAreaMessage;
-		this.inMessage = inMessage;
-		this.outMessage = outMessage;
-		*/
 		// Задаём настройки элементов на форме
 		setBounds(600, 300, 600, 500);
 		setTitle("Client");
@@ -76,9 +71,9 @@ public class ClientWindow extends JFrame {
 		buttonSend.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// если имя клиента, и сообщение непустые, то отправляем сообщение
-				if (!messageField.getText().trim().isEmpty() && !nameField.getText().trim().isEmpty()) {
-					//clientName = nameField.getText();
-					sendMsg();
+				if (!messageField.getText().trim().isEmpty()) {
+					// clientName = nameField.getText();
+					sendMessage();
 					// фокус на текстовое поле с сообщением
 					messageField.grabFocus();
 				}
@@ -99,43 +94,47 @@ public class ClientWindow extends JFrame {
 			}
 		});
 		// в отдельном потоке начинаем работу с сервером
-		
-		
-		/*
+
 		// добавляем обработчик события закрытия окна клиентского приложения
 		addWindowListener(new WindowAdapter() {
-			
 
 			@Override
 			public void windowClosing(WindowEvent e) {
 				super.windowClosing(e);
-				
 				// здесь проверяем, что имя клиента непустое и не равно значению по умолчанию
-				if (!clientName.isEmpty() && clientName != "Введите ваше имя: ") {
-					outMessage.println(clientName + " вышел из чата!");
+				if (client.getClientName().length() != 0 && !client.getClientName().equals("Введите ваше имя: ")) {
+					sendFinalMessage(client.getClientName() + " вышел из чата!");
 				} else {
-					outMessage.println("Участник вышел из чата, так и не представившись!");
+					sendFinalMessage("Участник вышел из чата, так и не представившись!");
 				}
 				// отправляем служебное сообщение, которое является признаком того, что клиент
 				// вышел из чата
-				outMessage.println("##session##end##");
-				outMessage.flush();
-				outMessage.close();
-				inMessage.close();
-				//clientSocket.close();
+
+				client.endSession();
+
 			}
+
 		});
-		*/
+
 		// отображаем форму
-		
+
 	}
-		
+
+	private void sendFinalMessage(String string) {
+		client.performSendingMessage("END" + string);
+
+	}
+
 	// отправка сообщения
-	public void sendMsg() {
+	public void sendMessage() {
+		if (isFirstMessage) {
+			client.defineClientName(nameField.getText());
+			isFirstMessage = false;
+		}
 		// формируем сообщение для отправки на сервер
-		String messageStr = nameField.getText() + ": " + messageField.getText();
+		String messageStr = client.getClientName() + ": " + messageField.getText();
 		// отправляем сообщение
-		client.performSendingMessage(messageStr);
+		client.performSendingMessage("RPL" + messageStr);
 		messageField.setText("");
 	}
 
@@ -143,7 +142,17 @@ public class ClientWindow extends JFrame {
 		// TODO Auto-generated method stub
 		jtaTextAreaMessage.append(string);
 	}
-}
+
+	public void dislpayQuantityOfClientsInChat(String inMes) {
+		jlNumberOfClients.setText(inMes);
+
+	}
+
+	public void freezeNameOfClient(String name) {
+		nameField.setText(name);
+		nameField.setEditable(false);
+		
+	}
+
 	
-		
-		
+}

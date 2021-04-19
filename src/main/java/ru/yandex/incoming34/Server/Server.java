@@ -16,12 +16,12 @@ public class Server {
 	// порт, который будет прослушивать наш сервер
 	static final int PORT = 3443;
 	// список клиентов, которые будут подключаться к серверу
-	private ArrayList<ClientHandler> clients = new ArrayList<ClientHandler>();
+	private static ArrayList<ClientHandler> clients = new ArrayList<ClientHandler>();
 
 	@Autowired
 	ClientHandler clientHandler;
 	ApplicationContext context;
-	private Server server;
+	
 
 	public ClientHandler getClientHandler() {
 		// TODO Auto-generated method stub
@@ -61,8 +61,10 @@ public class Server {
 				client.initialize(clientSocket, this);
 				System.out.println("Новое подключение: " + client);
 				clients.add(client);
+				System.out.println("Total clients connected to server: " + clients.size());
 				// каждое подключение клиента обрабатываем в новом потоке
 				//new Thread(clientHandler).start();
+				//client.handleClient();
 			}
 		} catch (IOException ex) {
 			ex.printStackTrace();
@@ -79,8 +81,10 @@ public class Server {
 	}
 
 	public void sendMessageToAllClients(String msg) {
+		System.out.println("Total clients connected to server: " + clients.size());
 		for (ClientHandler o : clients) {
 			o.sendMessageToClient(msg);
+			System.out.println("Server sent message " + msg + " to client " + o);
 		}
 
 	}

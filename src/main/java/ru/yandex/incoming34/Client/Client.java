@@ -3,6 +3,7 @@ package ru.yandex.incoming34.Client;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Objects;
 import java.util.Scanner;
 
 import javax.swing.JLabel;
@@ -12,18 +13,24 @@ public class Client {
 	// графический интерфейс
 	ClientWindow clientWindow;
 	// адрес сервера
-		private static final String SERVER_HOST = "localhost";
-		// порт
-		private static final int SERVER_PORT = 3443;
-		// клиентский сокет
-		private Socket clientSocket;
-		// входящее сообщение
-		private Scanner inMessage;
-		// исходящее сообщение
-		private PrintWriter outMessage;
-		private JLabel jlNumberOfClients;
-		public Client() {
-		
+	private static final String SERVER_HOST = "localhost";
+	// порт
+	private static final int SERVER_PORT = 3443;
+	// клиентский сокет
+	private Socket clientSocket;
+	// входящее сообщение
+	private Scanner inMessage;
+	// исходящее сообщение
+	private PrintWriter outMessage;
+	private JLabel jlNumberOfClients;
+	private String clientName = null;
+
+	public String getClientName() {
+		return clientName;
+	}
+
+	public Client() {
+
 		try {
 			// подключаемся к серверу
 			clientSocket = new Socket(SERVER_HOST, SERVER_PORT);
@@ -36,36 +43,74 @@ public class Client {
 		clientWindow = new ClientWindow(this);
 		performWork();
 	}
-	
+
 	public void performWork() {
-	while (true) {
-			try {
-				// бесконечный цикл
-				while (true) {
-					// если есть входящее сообщение
-					if (inMessage.hasNext()) {
-						// считываем его
-						String inMes = inMessage.nextLine();
-						String clientsInChat = "Клиентов в чате = ";
-						if (inMes.indexOf(clientsInChat) == 0) {
-							jlNumberOfClients.setText(inMes);
-							clientWindow.displayMessage("Empty message");
-						} else {
-							clientWindow.displayMessage(inMes + "\n");
-						}
+
+		// бесконечный цикл
+		while (true) {
+			// если есть входящее сообщение
+			if (inMessage.hasNext()) {
+				// считываем его
+				String inMes = inMessage.nextLine();
+				if (inMes.length() < 3) {
+					continue;
+				} else {
+					String command = inMes.substring(0, 3);
+					switch (command) {
+					case "CLN": {
+						clientWindow.dislpayQuantityOfClientsInChat(
+								"Клиентов в чате = " + inMes.substring(4, inMes.length()));
+						break;
+					}
+					case "MSG": {
+						clientWindow.displayMessage(inMes.substring(3) + "\n");
+						break;
+					}
+					default:
+						break;
 					}
 				}
-			} catch (Exception e) {
 			}
 		}
-}
+
+	}
 
 	public void performSendingMessage(String messageStr) {
 		outMessage.println(messageStr);
-		System.out.println(messageStr);
+		System.out.println("Client sent message: " + messageStr);
 		outMessage.flush();
-		//jtfMessage.setText("");
+		// jtfMessage.setText("");
+
+	}
+
+	public void endSession() {
 		
-	}	
+		System.out.println("Session ended.");
+		outMessage.println("END");
+		outMessage.flush();
+		outMessage.close();
+		inMessage.close();
+		
+		try {
+			clientSocket.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+	public void defineClientName(String text) {
+		System.out.println("In defineClientName(String text)");
+			System.out.println("Text: " + text + text.length());
+			if (text.length() == 0 || text.equals("Введите ваше имя: ")) {
+				clientName = "Incognito";
+			} else {
+				clientName = text;
+			}
+			clientWindow.freezeNameOfClient(clientName);
+		}
+		
+	
 
 }
