@@ -22,9 +22,16 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ClientWindow extends JFrame {
 	// ссылка для привязки графического окна к клиенту
-	final Client client;
+	Client client;
 
 	// следующие поля отвечают за элементы формы
 	private JTextField messageField;
@@ -32,20 +39,17 @@ public class ClientWindow extends JFrame {
 	private JTextArea jtaTextAreaMessage;
 	private JLabel jlNumberOfClients;
 	private boolean isFirstMessage = true;
-	// Scanner inMessage;
-	// имя клиента
-	//private String clientName = null;
 
-	// получаем имя клиента
-	/*
-	public String getClientName() {
-		return this.clientName;
+	public ClientWindow() {
+		// this.client = client;
+		initiateWindow();
 	}
-	*/
 
-	// конструктор
-	public ClientWindow(final Client client) {
+	public void setClient(Client client) {
 		this.client = client;
+	}
+
+	private void initiateWindow() {
 		// Задаём настройки элементов на форме
 		setBounds(600, 300, 600, 500);
 		setTitle("Client");
@@ -102,15 +106,15 @@ public class ClientWindow extends JFrame {
 			public void windowClosing(WindowEvent e) {
 				super.windowClosing(e);
 				// здесь проверяем, что имя клиента непустое и не равно значению по умолчанию
-				if (client.getClientName().length() != 0 && !client.getClientName().equals("Введите ваше имя: ")) {
-					sendFinalMessage(client.getClientName() + " вышел из чата!");
-				} else {
-					sendFinalMessage("Участник вышел из чата, так и не представившись!");
-				}
-				// отправляем служебное сообщение, которое является признаком того, что клиент
-				// вышел из чата
-
-				client.endSession();
+				/*
+				 * if (client.getClientName().length() != 0 &&
+				 * !client.getClientName().equals("Введите ваше имя: ")) {
+				 * sendFinalMessage(client.getClientName() + " вышел из чата!"); } else {
+				 * sendFinalMessage("Участник вышел из чата, так и не представившись!"); } //
+				 * отправляем служебное сообщение, которое является признаком того, что клиент
+				 * // вышел из чата
+				 */
+				endSession();
 
 			}
 
@@ -122,6 +126,11 @@ public class ClientWindow extends JFrame {
 
 	private void sendFinalMessage(String string) {
 		client.performSendingMessage("END" + string);
+
+	}
+
+	private void endSession() {
+		client.endSession();
 
 	}
 
@@ -151,8 +160,7 @@ public class ClientWindow extends JFrame {
 	public void freezeNameOfClient(String name) {
 		nameField.setText(name);
 		nameField.setEditable(false);
-		
+
 	}
 
-	
 }

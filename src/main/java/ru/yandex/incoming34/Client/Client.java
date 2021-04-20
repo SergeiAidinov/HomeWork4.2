@@ -9,6 +9,14 @@ import java.util.Scanner;
 import javax.swing.JLabel;
 import javax.swing.JTextArea;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.stereotype.Component;
+
+import ru.yandex.incoming34.Server.ClientHandler;
+
+@Component
 public class Client {
 	// графический интерфейс
 	ClientWindow clientWindow;
@@ -29,18 +37,19 @@ public class Client {
 		return clientName;
 	}
 
-	public Client() {
-
+	@Autowired
+	public Client(ClientWindow clientWindow) {
 		try {
 			// подключаемся к серверу
 			clientSocket = new Socket(SERVER_HOST, SERVER_PORT);
 			inMessage = new Scanner(clientSocket.getInputStream());
 			outMessage = new PrintWriter(clientSocket.getOutputStream());
+			this.clientWindow = clientWindow;
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		clientWindow = new ClientWindow(this);
+		clientWindow.setClient(this);
 		performWork();
 	}
 
@@ -79,38 +88,40 @@ public class Client {
 		outMessage.println(messageStr);
 		System.out.println("Client sent message: " + messageStr);
 		outMessage.flush();
-		// jtfMessage.setText("");
 
 	}
 
 	public void endSession() {
-		
+
 		System.out.println("Session ended.");
 		outMessage.println("END");
 		outMessage.flush();
 		outMessage.close();
 		inMessage.close();
-		
+
 		try {
 			clientSocket.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	public void defineClientName(String text) {
 		System.out.println("In defineClientName(String text)");
-			System.out.println("Text: " + text + text.length());
-			if (text.length() == 0 || text.equals("Введите ваше имя: ")) {
-				clientName = "Incognito";
-			} else {
-				clientName = text;
-			}
-			clientWindow.freezeNameOfClient(clientName);
+		System.out.println("Text: " + text + text.length());
+		if (text.length() == 0 || text.equals("Введите ваше имя: ")) {
+			clientName = "Incognito";
+		} else {
+			clientName = text;
 		}
-		
-	
+		clientWindow.freezeNameOfClient(clientName);
+	}
+
+	public ClientWindow getClientWindow() {
+		// TODO Auto-generated method stub
+		return clientWindow;
+	}
 
 }
