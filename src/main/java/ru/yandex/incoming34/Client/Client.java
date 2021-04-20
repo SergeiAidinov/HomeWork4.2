@@ -31,7 +31,7 @@ public class Client {
 	// исходящее сообщение
 	private PrintWriter outMessage;
 	private JLabel jlNumberOfClients;
-	private String clientName = null;
+	private String clientName = "Incognito";
 
 	public String getClientName() {
 		return clientName;
@@ -67,8 +67,7 @@ public class Client {
 					String command = inMes.substring(0, 3);
 					switch (command) {
 					case "CLN": {
-						clientWindow.dislpayQuantityOfClientsInChat(
-								"Клиентов в чате = " + inMes.substring(4, inMes.length()));
+						clientWindow.dislpayQuantityOfClientsInChat(inMes.substring(3, inMes.length()));
 						break;
 					}
 					case "MSG": {
@@ -94,7 +93,6 @@ public class Client {
 	public void endSession() {
 
 		System.out.println("Session ended.");
-		outMessage.println("END");
 		outMessage.flush();
 		outMessage.close();
 		inMessage.close();
@@ -102,7 +100,6 @@ public class Client {
 		try {
 			clientSocket.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -111,16 +108,13 @@ public class Client {
 	public void defineClientName(String text) {
 		System.out.println("In defineClientName(String text)");
 		System.out.println("Text: " + text + text.length());
-		if (text.length() == 0 || text.equals("Введите ваше имя: ")) {
-			clientName = "Incognito";
-		} else {
+		if (!(text.length() == 0 || text.equals("Введите ваше имя: "))) {
 			clientName = text;
 		}
 		clientWindow.freezeNameOfClient(clientName);
 	}
 
 	public ClientWindow getClientWindow() {
-		// TODO Auto-generated method stub
 		return clientWindow;
 	}
 

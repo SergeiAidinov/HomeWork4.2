@@ -41,7 +41,6 @@ public class ClientWindow extends JFrame {
 	private boolean isFirstMessage = true;
 
 	public ClientWindow() {
-		// this.client = client;
 		initiateWindow();
 	}
 
@@ -74,7 +73,7 @@ public class ClientWindow extends JFrame {
 		// обработчик события нажатия кнопки отправки сообщения
 		buttonSend.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// если имя клиента, и сообщение непустые, то отправляем сообщение
+				// если сообщение непустое, то отправляем сообщение
 				if (!messageField.getText().trim().isEmpty()) {
 					// clientName = nameField.getText();
 					sendMessage();
@@ -98,29 +97,16 @@ public class ClientWindow extends JFrame {
 			}
 		});
 		// в отдельном потоке начинаем работу с сервером
-
 		// добавляем обработчик события закрытия окна клиентского приложения
 		addWindowListener(new WindowAdapter() {
 
 			@Override
 			public void windowClosing(WindowEvent e) {
 				super.windowClosing(e);
-				// здесь проверяем, что имя клиента непустое и не равно значению по умолчанию
-				/*
-				 * if (client.getClientName().length() != 0 &&
-				 * !client.getClientName().equals("Введите ваше имя: ")) {
-				 * sendFinalMessage(client.getClientName() + " вышел из чата!"); } else {
-				 * sendFinalMessage("Участник вышел из чата, так и не представившись!"); } //
-				 * отправляем служебное сообщение, которое является признаком того, что клиент
-				 * // вышел из чата
-				 */
+				sendFinalMessage(client.getClientName() + " вышел из чата!");
 				endSession();
-
 			}
-
 		});
-
-		// отображаем форму
 
 	}
 
@@ -148,7 +134,6 @@ public class ClientWindow extends JFrame {
 	}
 
 	public void displayMessage(String string) {
-		// TODO Auto-generated method stub
 		jtaTextAreaMessage.append(string);
 	}
 

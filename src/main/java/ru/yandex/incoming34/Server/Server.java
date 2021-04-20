@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -17,7 +18,7 @@ public class Server {
 	static final int PORT = 3443;
 	// список клиентов, которые будут подключаться к серверу
 	private static ArrayList<ClientHandler> clients = new ArrayList<ClientHandler>();
-
+	static AtomicInteger clients_count =  new AtomicInteger(0);
 	@Autowired
 	ClientHandler clientHandler;
 	ApplicationContext context;
@@ -81,10 +82,11 @@ public class Server {
 	}
 
 	public void sendMessageToAllClients(String msg) {
+		clients.trimToSize();
 		System.out.println("Total clients connected to server: " + clients.size());
-		for (ClientHandler o : clients) {
-			o.sendMessageToClient(msg);
-			System.out.println("Server sent message " + msg + " to client " + o);
+		for (ClientHandler oneClient : clients) {
+			oneClient.sendMessageToClient(msg);
+			System.out.println("Server sent message " + msg + " to client " + oneClient);
 		}
 
 	}

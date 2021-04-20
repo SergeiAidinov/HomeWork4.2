@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -27,11 +28,11 @@ public class ClientHandler  extends Thread{
 	// клиентский сокет
 	private Socket clientSocket = null;
 	// количество клиента в чате, статичное поле
-	private static int clients_count = 0;
+	
 	
 	public void initialize(Socket socket, Server server) {
 	    try {
-	      clients_count++;
+	      server.clients_count.incrementAndGet();
 	      this.server = server;
 	      this.clientSocket = socket;
 	      outMessage = new PrintWriter(socket.getOutputStream());
@@ -55,7 +56,7 @@ public class ClientHandler  extends Thread{
 		
 			// сервер отправляет сообщение
 			server.sendMessageToAllClients("MSGНовый участник вошёл в чат!");
-			server.sendMessageToAllClients("CLNКлиентов в чате = " + clients_count);
+			server.sendMessageToAllClients("CLNКоличество клиентов в чате: " + server.clients_count.get());
 		
 		while (true) {
 			if (Objects.isNull(inMessage)) {
@@ -78,28 +79,18 @@ public class ClientHandler  extends Thread{
 					
 				case "END": {
 					server.sendMessageToAllClients("MSG" + clientMessage.substring(3));
+					server.sendMessageToAllClients("CLNКоличество клиентов в чате: " + server.clients_count.decrementAndGet());
 					System.out.println(clientMessage.substring(3));
+					server.removeClient(this);
 					this.interrupt();
 					break;
-					
 				}
-					
 					default:
 					{
 						continue;
 					}
 				}
-				
-				// если клиент отправляет данное сообщение, то цикл прерывается и
-				// клиент выходит из чата
-				
-				// выводим в консоль сообщение (для теста)
-				
-				// отправляем данное сообщение всем клиентам
-				//server.sendMessageToAllClients(clientMessage);
 			}
-			// останавливаем выполнение потока на 100 мс
-			
 		}
 	}
 
@@ -113,12 +104,14 @@ public class ClientHandler  extends Thread{
 		}
 	}
 
+	/*
 	// клиент выходит из чата
 	public void close() {
 		// удаляем клиента из списка
 		server.removeClient(this);
-		clients_count--;
-		server.sendMessageToAllClients("Клиентов в чате = " + clients_count);
+		//clients_count--;
+		//server.sendMessageToAllClients("Клиентов в чате = " + clients_count);
 	}
+	*/
 
 }
