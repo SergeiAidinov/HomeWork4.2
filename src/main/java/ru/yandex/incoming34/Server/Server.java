@@ -25,7 +25,6 @@ public class Server {
 	
 
 	public ClientHandler getClientHandler() {
-		// TODO Auto-generated method stub
 		return clientHandler;
 	}
 	
@@ -63,9 +62,6 @@ public class Server {
 				System.out.println("Новое подключение: " + client);
 				clients.add(client);
 				System.out.println("Total clients connected to server: " + clients.size());
-				// каждое подключение клиента обрабатываем в новом потоке
-				//new Thread(clientHandler).start();
-				//client.handleClient();
 			}
 		} catch (IOException ex) {
 			ex.printStackTrace();

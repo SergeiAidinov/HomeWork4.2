@@ -5,14 +5,11 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Objects;
 import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import ru.yandex.incoming34.Server.Server;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -42,7 +39,6 @@ public class ClientHandler  extends Thread{
 	    }
 	    System.out.println("ClientHandler initialized: " + this + " for Server: " + server);
 	    System.out.println("Канал входящих сообщений: " + inMessage + " Канал исходящих сообщений: " + outMessage);
-	    //handleClient();
 	    this.start();
 	  }
 	
@@ -103,15 +99,4 @@ public class ClientHandler  extends Thread{
 			ex.printStackTrace();
 		}
 	}
-
-	/*
-	// клиент выходит из чата
-	public void close() {
-		// удаляем клиента из списка
-		server.removeClient(this);
-		//clients_count--;
-		//server.sendMessageToAllClients("Клиентов в чате = " + clients_count);
-	}
-	*/
-
 }
